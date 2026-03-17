@@ -14,6 +14,8 @@ Blocks adult content, ads, spam, and distractions — with dark mode, night shie
 
 </div>
 
+<img src="https://i.ibb.co/Zp8pwChW/wahid-blocker-final.png" alt="Chrome"/>
+
 ---
 
 ## 📦 Installation
