@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Wahid Blocker — Site Blocked</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:#0a0a0f;color:#e0e0f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+    .bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(255,60,60,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,60,60,0.04) 1px,transparent 1px);background-size:40px 40px;}
+    .glow{position:fixed;width:600px;height:600px;background:radial-gradient(circle,rgba(220,30,30,0.14) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 3s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08);}}
+    .card{position:relative;z-index:1;background:rgba(18,8,8,0.92);border:1px solid rgba(220,30,30,0.3);border-radius:20px;padding:44px 48px;max-width:480px;width:90%;text-align:center;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(220,30,30,0.1),0 20px 60px rgba(0,0,0,0.5);}
+    .shield{font-size:64px;margin-bottom:14px;display:block;filter:drop-shadow(0 0 20px rgba(220,60,60,0.8));animation:float 2s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    .brand{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff4444;margin-bottom:10px;font-weight:600;}
+    h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;}
+    .domain-pill{display:inline-block;background:rgba(220,30,30,0.15);border:1px solid rgba(220,30,30,0.4);border-radius:100px;padding:5px 18px;font-size:15px;color:#ff6b6b;margin:12px 0 6px 0;font-weight:600;word-break:break-all;}
+    .reason-tag{display:inline-block;background:rgba(255,100,0,0.1);border:1px solid rgba(255,100,0,0.3);border-radius:6px;padding:3px 12px;font-size:11px;color:#ff9944;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase;}
+    p{font-size:13px;color:#666;line-height:1.6;margin-bottom:24px;}
+    .footer{position:relative;z-index:1;margin-top:16px;font-size:11px;color:#222;}
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="glow"></div>
+  <div class="card">
+    <span class="shield">🛡️</span>
+    <div class="brand">Wahid Blocker</div>
+    <h1>Site Blocked</h1>
+    <div class="domain-pill" id="domain-display">—</div><br/>
+    <div class="reason-tag" id="reason-display">Protected</div>
+    <p>This website has been blocked by your child safety settings.<br/>If this seems like a mistake, you can whitelist it in the extension settings.</p>
+  </div>
+  <div class="footer">Protected by Wahid Blocker v3.0</div>
+  <script>
+    const p = new URLSearchParams(location.search);
+    document.getElementById("domain-display").textContent = p.get("domain") || "Unknown Site";
+    document.getElementById("reason-display").textContent = p.get("reason") || "Security Block";
+  </script>
+</body>
+</html>

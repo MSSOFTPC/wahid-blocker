@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Wahid Blocker</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+    :root{
+      --red:#e63030;--rl:#ff5555;--rg:rgba(230,48,48,0.2);
+      --green:#22cc66;--orange:#ff9944;--blue:#4499ff;
+      --bg:#0d0d14;--s1:#14141f;--s2:#1a1a28;--s3:#202033;
+      --bd:rgba(255,255,255,0.07);--text:#e8e8f0;--muted:#5a5a78;
+      --r:9px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);width:400px;overflow-x:hidden;}
+
+    /* ── Password Gate ── */
+    #pw-gate{position:fixed;inset:0;background:rgba(6,6,12,0.98);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px;}
+    #pw-gate.show{display:flex;}
+    #pw-gate .ico{font-size:44px;filter:drop-shadow(0 0 12px rgba(230,48,48,0.6));}
+    #pw-gate h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;}
+    #pw-gate p{font-size:12px;color:var(--muted);text-align:center;}
+    #pw-gate input{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+    #pw-gate input:focus{border-color:rgba(230,48,48,.5);}
+    #pw-err{font-size:11px;color:var(--rl);display:none;}
+    #pw-submit{width:100%;background:linear-gradient(135deg,#a01818,var(--red));color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+    #pw-submit:hover{filter:brightness(1.15);}
+
+    /* ── Header ── */
+    .hdr{background:linear-gradient(135deg,#0d0d14,#170a0a);border-bottom:1px solid var(--bd);padding:11px 14px;display:flex;align-items:center;gap:9px;position:relative;}
+    .hdr::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
+    .hdr-logo{font-size:22px;filter:drop-shadow(0 0 7px rgba(230,48,48,.7));}
+    .hdr-text h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.3px;}
+    .hdr-text span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+    .hdr-right{display:flex;align-items:center;gap:7px;margin-left:auto;}
+    #btn-block-current{background:linear-gradient(135deg,#6b0000,#c42020);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(230,48,48,.35);transition:all .2s;}
+    #btn-block-current:hover{filter:brightness(1.2);transform:scale(1.05);}
+    .master-toggle{width:44px;height:24px;background:#1e1e2e;border-radius:12px;cursor:pointer;border:1px solid var(--bd);position:relative;transition:background .3s;flex-shrink:0;}
+    .master-toggle.on{background:linear-gradient(135deg,#b01818,var(--red));border-color:var(--red);}
+    .master-toggle .thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 4px rgba(0,0,0,.4);}
+    .master-toggle.on .thumb{left:23px;}
+
+    /* ── Stats ── */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bd);border-bottom:1px solid var(--bd);}
+    .stat{background:var(--s1);padding:8px 4px;text-align:center;}
+    .stat-n{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--rl);}
+    .stat-l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:1px;}
+
+    /* ── Tabs ── */
+    .tabs{display:flex;border-bottom:1px solid var(--bd);background:var(--s1);}
+    .tab{flex:1;padding:8px 2px;font-size:9px;text-align:center;cursor:pointer;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;transition:all .2s;border-bottom:2px solid transparent;}
+    .tab:hover{color:var(--text);}
+    .tab.active{color:var(--rl);border-bottom-color:var(--red);background:rgba(230,48,48,.05);}
+
+    /* ── Content ── */
+    .pane{display:none;padding:12px;max-height:400px;overflow-y:auto;}
+    .pane.active{display:block;}
+    .pane::-webkit-scrollbar{width:3px;}
+    .pane::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px;}
+
+    /* ── Section title ── */
+    .sec{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:10px 0 6px;}
+    .sec:first-child{margin-top:2px;}
+
+    /* ── Toggle Row ── */
+    .tr{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:var(--r);margin-bottom:5px;border:1px solid var(--bd);transition:border-color .2s;gap:8px;}
+    .tr:hover{border-color:rgba(230,48,48,.18);}
+    .tr-left{display:flex;align-items:center;gap:8px;min-width:0;}
+    .tr-ico{font-size:14px;flex-shrink:0;}
+    .tr-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;}
+    .tr-desc{font-size:9px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+    /* Toggle switch */
+    .tog{width:36px;height:20px;background:#1e1e2e;border-radius:10px;cursor:pointer;border:1px solid var(--bd);position:relative;flex-shrink:0;transition:background .25s;}
+    .tog.on{background:linear-gradient(135deg,#a01818,var(--red));border-color:var(--red);}
+    .tog .th{position:absolute;top:3px;left:3px;width:12px;height:12px;background:#fff;border-radius:50%;transition:left .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 3px rgba(0,0,0,.35);}
+    .tog.on .th{left:19px;}
+
+    /* ── Inputs ── */
+    .ig{margin-bottom:8px;}
+    .il{font-size:10px;color:var(--muted);margin-bottom:4px;display:block;}
+    .irow{display:flex;gap:5px;}
+    input[type=text],input[type=password],input[type=number]{flex:1;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+    input:focus{border-color:rgba(230,48,48,.45);}
+    input[type=range]{flex:1;accent-color:var(--orange);}
+    .ba{background:var(--red);color:#fff;border:none;border-radius:7px;padding:7px 11px;cursor:pointer;font-size:11px;font-weight:600;transition:all .2s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+    .ba:hover{background:var(--rl);transform:scale(1.03);}
+    .ba.g{background:#1a7a3a;}
+    .ba.g:hover{background:var(--green);}
+    .ba.b{background:#1a3a8a;}
+    .ba.b:hover{background:var(--blue);}
+
+    /* ── Domain tags ── */
+    .dtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+    .dtag{background:rgba(230,48,48,.1);border:1px solid rgba(230,48,48,.22);border-radius:100px;padding:2px 8px;font-size:10px;color:#ff7777;display:flex;align-items:center;gap:3px;}
+    .dtag .x{cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;line-height:1;transition:color .15s;}
+    .dtag .x:hover{color:var(--rl);}
+    .wtag{background:rgba(34,204,102,.1);border-color:rgba(34,204,102,.22);color:#44dd88;}
+
+    /* ── Activity log ── */
+    .li{display:flex;align-items:flex-start;gap:7px;padding:7px 9px;background:var(--s2);border-radius:7px;margin-bottom:4px;border:1px solid var(--bd);}
+    .ld{width:6px;height:6px;border-radius:50%;background:var(--red);margin-top:4px;flex-shrink:0;box-shadow:0 0 4px var(--rg);}
+    .ln{font-size:11px;font-weight:500;}
+    .lm{font-size:9px;color:var(--muted);margin-top:1px;}
+    .le{text-align:center;color:var(--muted);font-size:11px;padding:16px 0;}
+
+    /* ── Analytics chart ── */
+    .chart-wrap{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+    .chart-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+    .bars{display:flex;align-items:flex-end;gap:4px;height:60px;}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .bar{width:100%;background:linear-gradient(180deg,var(--rl),var(--red));border-radius:3px 3px 0 0;min-height:2px;transition:height .4s;}
+    .bar-lbl{font-size:8px;color:var(--muted);}
+    .bar-val{font-size:8px;color:var(--rl);font-weight:600;}
+    .ana-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+    .ana-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:10px;text-align:center;}
+    .ana-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--rl);}
+    .ana-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
+    .top-domains{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:10px;}
+    .td-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bd);}
+    .td-row:last-child{border-bottom:none;}
+    .td-name{font-size:11px;color:var(--text);}
+    .td-count{font-size:10px;color:var(--rl);font-weight:600;}
+
+    /* ── Settings ── */
+    .pw-box{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:10px;margin-bottom:8px;}
+    .pw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .pw-title{font-size:12px;font-weight:600;color:var(--text);}
+    .pw-status{font-size:10px;padding:2px 8px;border-radius:100px;font-weight:600;}
+    .pw-status.on{background:rgba(34,204,102,.12);color:var(--green);border:1px solid rgba(34,204,102,.25);}
+    .pw-status.off{background:rgba(100,100,130,.12);color:var(--muted);border:1px solid var(--bd);}
+    .pw-btns{display:flex;gap:5px;margin-top:6px;}
+    .pw-btns button{flex:1;padding:6px;font-size:10px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+    #btn-pw-enable{background:linear-gradient(135deg,#1a7a3a,var(--green));color:#fff;}
+    #btn-pw-enable:hover{filter:brightness(1.15);}
+    #btn-pw-disable{background:rgba(230,48,48,.12);color:var(--rl);border:1px solid rgba(230,48,48,.2);}
+    #btn-pw-disable:hover{background:rgba(230,48,48,.22);}
+
+    .divider{height:1px;background:var(--bd);margin:8px 0;}
+    .fb{display:flex;align-items:center;justify-content:space-between;}
+    .bd{background:rgba(230,48,48,.08);color:var(--rl);border:1px solid rgba(230,48,48,.2);border-radius:7px;padding:5px 11px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .2s;}
+    .bd:hover{background:rgba(230,48,48,.18);}
+
+    /* Night shield overlay injected to page */
+    .slider-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
+    .slider-val{font-size:11px;color:var(--orange);width:28px;text-align:right;}
+
+    /* Screen time display */
+    .st-bar-bg{background:var(--s3);border-radius:4px;height:8px;overflow:hidden;margin-top:5px;}
+    .st-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--orange));border-radius:4px;transition:width .5s;}
+    .st-info{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:3px;}
+  </style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="pw-gate">
+  <div class="ico">🔐</div>
+  <h2>Wahid Blocker</h2>
+  <p>Enter your parental password to access settings</p>
+  <input type="password" id="pw-input" placeholder="Enter password…"/>
+  <div id="pw-err">Incorrect password. Try again.</div>
+  <button id="pw-submit">🔓 Unlock</button>
+</div>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-logo">🛡️</div>
+  <div class="hdr-text">
+    <h1>Wahid Blocker</h1>
+    <span id="status-text">Child Safety Shield</span>
+  </div>
+  <div class="hdr-right">
+    <button id="btn-block-current">🚫 Block Site</button>
+    <div class="master-toggle" id="master-toggle"><div class="thumb"></div></div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Blocked</div></div>
+  <div class="stat"><div class="stat-n" id="st-session">0</div><div class="stat-l">Session</div></div>
+  <div class="stat"><div class="stat-n" id="st-custom">0</div><div class="stat-l">Rules</div></div>
+  <div class="stat"><div class="stat-n" id="st-today">0</div><div class="stat-l">Today</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="protect">🛡️ Protect</div>
+  <div class="tab" data-tab="browse">🌐 Browse</div>
+  <div class="tab" data-tab="domains">📋 Domains</div>
+  <div class="tab" data-tab="analytics">📊 Analytics</div>
+  <div class="tab" data-tab="settings">⚙️ Settings</div>
+</div>
+
+<!-- PROTECT TAB -->
+<div class="pane active" id="tab-protect">
+
+  <div class="sec">Content Protection</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🔞</span><div><div class="tr-name">Adult Content Block</div><div class="tr-desc">Blocks 30+ adult & 18+ sites automatically</div></div></div>
+    <div class="tog" data-key="adultBlockEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🚫</span><div><div class="tr-name">Spam & Phishing Block</div><div class="tr-desc">Heuristic detection of harmful URLs</div></div></div>
+    <div class="tog" data-key="spamBlockEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">📢</span><div><div class="tr-name">Ads Blocker</div><div class="tr-desc">Collapses ad areas completely — no empty space</div></div></div>
+    <div class="tog" data-key="adBlockEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🔍</span><div><div class="tr-name">Safe Search</div><div class="tr-desc">Force Google SafeSearch on all searches</div></div></div>
+    <div class="tog" data-key="safeSearchEnabled"><div class="th"></div></div>
+  </div>
+
+  <div class="sec">YouTube Controls</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🎬</span><div><div class="tr-name">YouTube Complete Block</div><div class="tr-desc">Block YouTube entirely</div></div></div>
+    <div class="tog" data-key="youtubeBlockEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">📵</span><div><div class="tr-name">Shorts Block Only</div><div class="tr-desc">Block /shorts — normal videos still work</div></div></div>
+    <div class="tog" data-key="youtubeShortsBlock"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🎯</span><div><div class="tr-name">YouTube Focus Mode</div><div class="tr-desc">Focus button in player — hides sidebar & feed</div></div></div>
+    <div class="tog" data-key="youtubeFocusMode"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🔒</span><div><div class="tr-name">YouTube Restrict Mode</div><div class="tr-desc">Hides comments, sidebar, recommendations</div></div></div>
+    <div class="tog" data-key="youtubeRestrictMode"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">📺</span><div><div class="tr-name">YouTube PiP Button</div><div class="tr-desc">Adds Picture-in-Picture button below video</div></div></div>
+    <div class="tog" data-key="youtubePiP"><div class="th"></div></div>
+  </div>
+
+  <div class="sec">Monitoring</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🔔</span><div><div class="tr-name">Block Notifications</div><div class="tr-desc">Desktop notification on every block</div></div></div>
+    <div class="tog" data-key="monitoringEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">⏱️</span><div><div class="tr-name">Screen Time Limit</div><div class="tr-desc" id="st-desc">Set daily browsing limit</div></div></div>
+    <div class="tog" data-key="screentimeEnabled"><div class="th"></div></div>
+  </div>
+  <div id="st-settings" style="display:none;padding:6px 10px 4px;background:var(--s2);border-radius:var(--r);border:1px solid var(--bd);margin-bottom:5px;">
+    <div class="il">Daily limit (minutes)</div>
+    <div class="irow">
+      <input type="number" id="st-limit" min="10" max="480" value="60" style="width:80px;flex:none;"/>
+      <button class="ba" id="btn-st-save">Save Limit</button>
+    </div>
+    <div class="st-bar-bg" style="margin-top:8px;"><div class="st-bar-fill" id="st-bar" style="width:0%"></div></div>
+    <div class="st-info"><span id="st-used">0 min used</span><span id="st-limit-disp">60 min limit</span></div>
+  </div>
+</div>
+
+<!-- BROWSE TAB -->
+<div class="pane" id="tab-browse">
+
+  <div class="sec">Display & Vision</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🌙</span><div><div class="tr-name">Dark Mode</div><div class="tr-desc">Force dark mode on all websites</div></div></div>
+    <div class="tog" data-key="darkModeEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🔆</span><div><div class="tr-name">Night Shield</div><div class="tr-desc">Warm amber overlay to reduce eye strain</div></div></div>
+    <div class="tog" data-key="nightShieldEnabled"><div class="th"></div></div>
+  </div>
+  <div id="ns-slider-row" class="slider-row" style="display:none;padding:0 10px 6px;">
+    <span style="font-size:10px;color:var(--muted)">Intensity</span>
+    <input type="range" id="ns-slider" min="10" max="80" value="40"/>
+    <span class="slider-val" id="ns-val">40%</span>
+  </div>
+
+  <div class="sec">Reading & Focus</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">📖</span><div><div class="tr-name">Reader Mode</div><div class="tr-desc">Show only article text & images — no clutter</div></div></div>
+    <div class="tog" data-key="readerModeEnabled"><div class="th"></div></div>
+  </div>
+
+  <div class="sec">Privacy</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">👁️</span><div><div class="tr-name">Hide Tracking Pixels</div><div class="tr-desc">Remove invisible 1×1 tracking images</div></div></div>
+    <div class="tog" data-key="adBlockEnabled"><div class="th"></div></div>
+  </div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🍪</span><div><div class="tr-name">Cookie Banner Remover</div><div class="tr-desc">Auto-dismiss cookie consent popups</div></div></div>
+    <div class="tog" data-key="cookieBannerBlock"><div class="th"></div></div>
+  </div>
+</div>
+
+<!-- DOMAINS TAB -->
+<div class="pane" id="tab-domains">
+  <div class="sec">Block a Domain</div>
+  <div class="ig">
+    <div class="irow">
+      <input type="text" id="block-input" placeholder="e.g. tiktok.com"/>
+      <button class="ba" id="btn-add-block">+ Block</button>
+    </div>
+    <div class="dtags" id="block-list"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="sec">Whitelist (Always Allow)</div>
+  <div class="ig">
+    <div class="irow">
+      <input type="text" id="whitelist-input" placeholder="e.g. trusted-site.com"/>
+      <button class="ba g" id="btn-add-whitelist">✓ Allow</button>
+    </div>
+    <div class="dtags" id="whitelist-list"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS TAB -->
+<div class="pane" id="tab-analytics">
+  <div class="sec">Last 7 Days — Blocks</div>
+  <div class="chart-wrap">
+    <div class="bars" id="analytics-bars"></div>
+  </div>
+  <div class="ana-grid">
+    <div class="ana-card"><div class="ana-num" id="ana-total">0</div><div class="ana-lbl">Total Blocked</div></div>
+    <div class="ana-card"><div class="ana-num" id="ana-today">0</div><div class="ana-lbl">Today</div></div>
+    <div class="ana-card"><div class="ana-num" id="ana-rules">0</div><div class="ana-lbl">Custom Rules</div></div>
+    <div class="ana-card"><div class="ana-num" id="ana-streak">0</div><div class="ana-lbl">Day Streak</div></div>
+  </div>
+  <div class="sec">Top Blocked Domains</div>
+  <div class="top-domains" id="top-domains"></div>
+  <div style="margin-top:8px;">
+    <button class="bd" id="btn-clear-log" style="width:100%">🗑️ Clear All Activity Data</button>
+  </div>
+</div>
+
+<!-- SETTINGS TAB -->
+<div class="pane" id="tab-settings">
+
+  <div class="sec">Parental Password Lock</div>
+  <div class="pw-box">
+    <div class="pw-header">
+      <div class="pw-title">🔐 Password Lock</div>
+      <div class="pw-status" id="pw-status-badge">OFF</div>
+    </div>
+    <div class="ig" style="margin-bottom:0">
+      <div class="irow">
+        <input type="password" id="pw-new" placeholder="Set new password…"/>
+        <button class="ba" id="btn-pw-save">Save</button>
+      </div>
+    </div>
+    <div class="pw-btns">
+      <button id="btn-pw-enable">🔒 Enable Lock</button>
+      <button id="btn-pw-disable">🔓 Disable Lock</button>
+    </div>
+    <div id="pw-msg" style="font-size:10px;color:var(--muted);margin-top:5px;"></div>
+  </div>
+
+  <div class="sec">Quick Actions</div>
+  <div class="tr">
+    <div class="tr-left"><span class="tr-ico">🔔</span><div><div class="tr-name">Block Notifications</div></div></div>
+    <div class="tog" data-key="monitoringEnabled"><div class="th"></div></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="sec">Reset & Export</div>
+  <div style="display:flex;gap:6px;">
+    <button class="ba b" id="btn-export" style="flex:1">📤 Export Log</button>
+    <button class="bd" id="btn-reset" style="flex:1">🔄 Reset All</button>
+  </div>
+
+  <div class="divider"></div>
+  <div style="background:var(--s2);border-radius:var(--r);padding:10px;border:1px solid var(--bd);font-size:10px;line-height:1.8;color:var(--muted)">
+    <strong style="color:var(--text);font-size:11px;">Wahid Blocker v3.0</strong><br/>
+    🛡️ Adult · 🚫 Spam · 📢 Ads · 🔍 SafeSearch<br/>
+    📵 Shorts · 🎯 Focus · 📺 PiP · 🌙 Dark Mode<br/>
+    🔆 Night Shield · 📖 Reader · ⏱️ Screen Time
+  </div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
