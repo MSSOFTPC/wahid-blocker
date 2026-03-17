@@ -24,7 +24,7 @@ Blocks adult content, ads, spam, and distractions — with dark mode, night shie
 
 1. **Download** this repository as a ZIP and extract it, **or** clone it:
    ```bash
-   git clone https://github.com/yourusername/wahid-blocker.git
+   git clone https://github.com/MSSOFTPC/wahid-blocker.git
    ```
 2. Open Chrome and navigate to **`chrome://extensions/`**
 3. Toggle **Developer mode** ON (top-right corner)
